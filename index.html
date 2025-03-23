@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxThera - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            background: #0c0c1d;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            height: 80px;
+        }
+        .logo img {
+            height: 100px;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+        }
+        .hero {
+            padding: 50px 20px;
+            background: url('background.jpg') no-repeat center center/cover;
+        }
+        h1 {
+            font-size: 42px;
+        }
+        
+        .disease-box {
+            width: 300px;
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .disease-box h3 {
+            color: #00aaff;
+        }
+        .disease-box p {
+            font-size: 14px;
+        }
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #007bff;
+        }
+        button {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #fluencyMeter {
+            width: 100%;
+            height: 20px;
+            background: lightgray;
+            border-radius: 10px;
+            margin-top: 10px;
+            position: relative;
+        }
+        #fluencyBar {
+            height: 100%;
+            width: 0%;
+            background: #007bff;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        #output {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo"><img src="VoxThera-removebg-preview.png" alt="VoxThera Logo"></div>
+        <nav>
+            <ul>
+                <li><a href="indexhome.html">Home</a></li>
+                <li><a href="index.html">Therapy</a></li>
+                <li><a href="indexabout.html">About</a></li>
+                <li><a href="profile.html">Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Speech Fluency Analyzer</h1>
+        <button id="recordBtn">🎤 Record Speech</button>
+        <button id="uploadBtn">📂 Upload Audio</button>
+        <input type="file" id="audioInput" accept="audio/wav">
+        
+        <div id="output">
+            <h3>Transcription:</h3>
+            <p id="transcription">-</p>
+
+            <h3>Fluency Score:</h3>
+            <div id="fluencyMeter">
+                <div id="fluencyBar"></div>
+            </div>
+            <p id="fluencyScore">-</p>
+
+            <h3>Speech Disorder Detection:</h3>
+            <p id="disorderStatus">-</p>
+
+            <h3>Recommended Exercise:</h3>
+            <p id="exerciseSuggestion">-</p>
+        </div>
+    </div>
+
+    <script>
+        const recordBtn = document.getElementById("recordBtn");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const audioInput = document.getElementById("audioInput");
+
+        const API_BASE = "http://127.0.0.1:8000";
+
+        async function fetchAnalysis(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`);
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                alert("Error: Unable to analyze speech.");
+            }
+        }
+
+        recordBtn.addEventListener("click", () => fetchAnalysis("record"));
+
+        uploadBtn.addEventListener("click", async () => {
+            const file = audioInput.files[0];
+            if (!file) {
+                alert("Please select an audio file.");
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
+            const data = await response.json();
+            updateUI(data);
+        });
+
+        function updateUI(data) {
+            document.getElementById("transcription").innerText = data.transcribed_text;
+            document.getElementById("fluencyScore").innerText = `${data.fluency_score} / 10`;
+            document.getElementById("disorderStatus").innerText = data.disorder_analysis;
+            document.getElementById("exerciseSuggestion").innerText = data.exercise;
+            document.getElementById("fluencyBar").style.width = `${(data.fluency_score / 10) * 100}%`;
+        }
+    </script>
+
+</body>
+</html>
